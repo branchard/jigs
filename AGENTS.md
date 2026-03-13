@@ -12,6 +12,7 @@ internal/dotenv/dotenv.go       — .env file parser and writer
 internal/dotenv/dotenv_test.go  — Unit tests for the dotenv package
 internal/prompt/prompt.go       — Interactive stdin/stdout prompt for variable values
 internal/prompt/prompt_test.go  — Unit tests for the prompt package
+.github/workflows/ci.yaml      — CI pipeline: test, build Docker image, publish to GHCR
 ```
 
 - `cmd/jigs/main.go` is the only binary entrypoint. It wires together the `dotenv` and `prompt` packages.
@@ -53,6 +54,15 @@ go test ./...
 Tests are colocated with source files (`_test.go` suffix, same package). The `dotenv` tests use temp files for parse/write round-trip verification. The `prompt` tests use `strings.Reader` and `bytes.Buffer` to simulate terminal I/O.
 
 All tests must pass before merging any change.
+
+## CI Pipeline
+
+The GitHub Actions workflow (`.github/workflows/ci.yaml`) runs on pushes to `main`, version tags (`v*`), and pull requests against `main`. It has two jobs:
+
+1. **test** — sets up Go and runs `go test ./...`.
+2. **build-and-publish** — builds the Docker image and pushes it to GitHub Container Registry (`ghcr.io/branchard/jigs`). On pull requests the image is built but not pushed. Image tags are derived automatically from the Git ref (branch name, PR number, semver from tags, short SHA).
+
+Authentication to GHCR uses the built-in `GITHUB_TOKEN` — no extra secrets are required.
 
 ## Common Tasks
 
