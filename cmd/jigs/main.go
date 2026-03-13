@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 
@@ -84,9 +85,10 @@ func main() {
 	// Prompt the user for missing values
 	fmt.Printf("Please provide values for %d variable(s):\n\n", len(toPrompt))
 
+	reader := bufio.NewReader(os.Stdin)
 	results := make(map[string]string)
 	for _, v := range toPrompt {
-		val, err := prompt.ForValue(os.Stdin, os.Stdout, v.key, v.value)
+		val, err := prompt.ForValue(reader, os.Stdout, v.key, v.value)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "\nError reading input: %v\n", err)
 			os.Exit(1)
