@@ -1,12 +1,9 @@
-name: CI
+name: Publish
 
-# Run on pushes to main, version tags (v1.0.0, etc.), and pull requests.
+# Run when a tag is pushed to the repository
 on:
   push:
-    branches: [ main ]
     tags: [ "v*" ]
-  pull_request:
-    branches: [ main ]
 
 # Read repo contents for checkout; write packages to push to GHCR.
 permissions:
@@ -17,27 +14,13 @@ env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
-  # ── Run the Go test suite ──────────────────────────────────────────
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Install the Go version declared in go.mod.
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - run: go test ./...
-
   # ── Build the Docker image and publish it to GHCR ──────────────────
   build-and-publish:
-    needs: test # only run after the tests pass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # QEMU enables emulation so Buildx can cross-build for ARM64
+      # QEMU enables emulation, so Buildx can cross-build for ARM64
       # on the amd64 runner.
       - uses: docker/setup-qemu-action@v3
 
@@ -53,19 +36,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Derive image tags from the Git ref:
-      #   push to main          → :main
-      #   pull request #42      → :pr-42
-      #   tag v1.2.3            → :1.2.3 and :1.2
-      #   every build           → :sha-<short>
+      # tag v1.2.3 → 1.2.3, 1.2 and 1
+      # → sha-<short>
       - uses: docker/metadata-action@v5
         id: meta
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=sha
 
       # Build the image for both amd64 and arm64, then push.
