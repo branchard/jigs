@@ -12,6 +12,7 @@ internal/dotenv/dotenv.go       — .env file parser and writer
 internal/dotenv/dotenv_test.go  — Unit tests for the dotenv package
 internal/prompt/prompt.go       — Interactive stdin/stdout prompt for variable values
 internal/prompt/prompt_test.go  — Unit tests for the prompt package
+e2e/e2e_test.go                 — End-to-end tests: build the binary and run it in temp dirs
 .github/workflows/ci.yaml      — CI pipeline: test, build Docker image, publish to GHCR
 ```
 
@@ -51,7 +52,7 @@ Run all tests:
 go test ./...
 ```
 
-Tests are colocated with source files (`_test.go` suffix, same package). The `dotenv` tests use temp files for parse/write round-trip verification. The `prompt` tests use `strings.Reader` and `bytes.Buffer` to simulate terminal I/O.
+Tests are colocated with source files (`_test.go` suffix, same package). The `dotenv` tests use temp files for parse/write round-trip verification. The `prompt` tests use `strings.Reader` and `bytes.Buffer` to simulate terminal I/O. The `e2e` tests compile the `jigs` binary, run it in isolated temp directories with piped stdin, and assert on stdout/stderr and the generated `.env` file content.
 
 All tests must pass before merging any change.
 
