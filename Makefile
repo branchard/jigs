@@ -7,7 +7,7 @@ help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } ' $(MAKEFILE_LIST)
 
 dev: ## Start a development container
-	docker compose run --rm --remove-orphans dev sh -c "make help; sh"
+	UID=$$(id -u) GID=$$(id -g) docker compose run --rm --remove-orphans dev sh -c "make help; PS1='\\w\$$ ' bash --noprofile --norc"
 
 build: ## Build the CLI tool
 	go build -o ./build/jigs ./cmd/jigs
