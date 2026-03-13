@@ -43,3 +43,9 @@ jigs .env.dist .env.dev
 ```
 
 Variables are collected from all files in order. The first file to define a key sets the default value; duplicates in later files are ignored.
+
+### With Docker
+
+```
+
+```
