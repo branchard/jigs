@@ -2,10 +2,11 @@
 services:
   # Service is used for local development.
   dev:
-    image: golang:1.26-alpine
+    image: golang:1.26
     environment:
       - GOCACHE=/tmp/go-cache
     volumes:
       - .:/jigs
     user: "${UID}:${GID}"
     working_dir: /jigs
+    tty: true
