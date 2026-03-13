@@ -1,6 +1,7 @@
 # 🧩 Jigs
 
 [![Test](https://github.com/branchard/jigs/actions/workflows/test.yaml/badge.svg)](https://github.com/branchard/jigs/actions/workflows/test.yaml)
+[![GitHub Tag](https://img.shields.io/github/v/tag/branchard/jigs)](https://github.com/branchard/jigs/tags)
 
 CLI tool for interactively managing dotenv files with no third-party dependencies.
 
