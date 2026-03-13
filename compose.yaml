@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+services:
+  # Service is used for local development.
+  dev:
+    image: golang:1.26-alpine
+    environment:
+      - GOCACHE=/tmp/go-cache
+    volumes:
+      - .:/jigs
+    user: "${UID}:${GID}"
+    working_dir: /jigs
