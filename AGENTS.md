@@ -60,7 +60,7 @@ All tests must pass before merging any change.
 The GitHub Actions workflow (`.github/workflows/ci.yaml`) runs on pushes to `main`, version tags (`v*`), and pull requests against `main`. It has two jobs:
 
 1. **test** — sets up Go and runs `go test ./...`.
-2. **build-and-publish** — builds the Docker image and pushes it to GitHub Container Registry (`ghcr.io/branchard/jigs`). On pull requests the image is built but not pushed. Image tags are derived automatically from the Git ref (branch name, PR number, semver from tags, short SHA).
+2. **build-and-publish** — builds a multi-platform Docker image (`linux/amd64` and `linux/arm64`) and pushes it to GitHub Container Registry (`ghcr.io/branchard/jigs`). On pull requests the image is built but not pushed. Image tags are derived automatically from the Git ref (branch name, PR number, semver from tags, short SHA).
 
 Authentication to GHCR uses the built-in `GITHUB_TOKEN` — no extra secrets are required.
 
