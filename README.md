@@ -1,5 +1,7 @@
 # 🧩 Jigs
 
+[![Test](https://github.com/branchard/jigs/actions/workflows/test.yaml/badge.svg)](https://github.com/branchard/jigs/actions/workflows/test.yaml)
+
 CLI tool for interactively managing dotenv files with no third-party dependencies.
 
 Takes one or more template files (e.g. `.env.dist`, `.env.dev`), prompts you for any missing values, and writes a `.env` file. If `.env` already exists, only variables not yet present are prompted.
