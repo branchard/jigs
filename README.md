@@ -47,5 +47,5 @@ Variables are collected from all files in order. The first file to define a key 
 ### With Docker
 
 ```
-
+docker run --rm -it --volume ./:/mnt/ ghcr.io/branchard/jigs:latest .env.dist
 ```
