@@ -1,7 +1,7 @@
 # 🧩 Jigs
 
 [![Test](https://github.com/branchard/jigs/actions/workflows/test.yaml/badge.svg)](https://github.com/branchard/jigs/actions/workflows/test.yaml)
-[![GitHub Tag](https://img.shields.io/github/v/tag/branchard/jigs)](https://github.com/branchard/jigs/tags)
+[![GitHub Release](https://img.shields.io/github/v/release/branchard/jigs)](https://github.com/branchard/jigs/releases)
 [![Go](https://img.shields.io/github/go-mod/go-version/branchard/jigs)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/branchard/jigs/blob/main/LICENSE)
 
