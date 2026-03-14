@@ -7,27 +7,34 @@ Jigs is a CLI tool written in Go for interactively managing `.env` files. It rea
 ## Repository Structure
 
 ```
-cmd/jigs/main.go                — CLI entrypoint: argument parsing, orchestration
-internal/dotenv/dotenv.go       — .env file parser and writer
-internal/dotenv/dotenv_test.go  — Unit tests for the dotenv package
-internal/prompt/prompt.go       — Interactive stdin/stdout prompt for variable values
-internal/prompt/prompt_test.go  — Unit tests for the prompt package
-e2e/e2e_test.go                 — End-to-end tests: build the binary and run it in temp dirs
-.github/workflows/ci.yaml      — CI pipeline: test, build Docker image, publish to GHCR
+cmd/jigs/main.go                 — CLI entrypoint: argument parsing, orchestration
+internal/dotenv/dotenv.go        — .env file parser and writer
+internal/dotenv/dotenv_test.go   — Unit tests for the dotenv package
+internal/prompt/prompt.go        — Interactive stdin/stdout prompt for variable values
+internal/prompt/prompt_test.go   — Unit tests for the prompt package
+e2e/e2e_test.go                  — End-to-end tests: build the binary and run it in temp dirs
+e2e/.env.dist                    — Sample template used by e2e tests
+e2e/.env.dev                     — Sample dev template used by e2e tests
+.github/workflows/test.yaml     — CI pipeline: runs tests on all pushes and PRs
+.github/workflows/release.yaml  — Release pipeline: GitHub Release + Docker image on version tags
+Makefile                         — Build, test, run, and dev targets
+Dockerfile                       — Multi-stage build (golang:1.26-alpine → scratch)
+compose.yaml                     — Docker Compose service for local development
 ```
 
-- `cmd/jigs/main.go` is the only binary entrypoint. It wires together the `dotenv` and `prompt` packages.
+- `cmd/jigs/main.go` is the only binary entrypoint. It wires together the `dotenv` and `prompt` packages. It supports `-h`/`--help` and `-v`/`--version` flags, and accepts one or more template file paths as positional arguments. A `version` variable is injected at build time via `-ldflags`.
 - `internal/dotenv/` handles parsing `.env` files into ordered entries (key-value pairs, comments, blank lines), querying variables, mutating values, and serializing back to disk. It preserves file structure (comments, blank lines) through round-trips.
-- `internal/prompt/` provides a single function `ForValue` that reads from an `io.Reader` and writes to an `io.Writer`, making it testable without a real terminal.
+- `internal/prompt/` provides a single function `ForValue` that takes a `*bufio.Reader` and an `io.Writer`. It uses `*bufio.Reader` (not `io.Reader`) so the caller can reuse the same buffered reader across multiple calls, which is critical for piped stdin.
 
 ## Language and Build
 
 - **Language**: Go (1.26+)
 - **Module path**: `github.com/branchard/jigs`
 - **No external dependencies** — stdlib only.
-- **Build**: `go build -o ./build/jigs ./cmd/jigs` (or `make build`)
+- **Build**: `make build` (runs `go build` with `-ldflags "-X main.version=..."` injecting the version from `git describe`)
 - **Test**: `go test ./...` (or `make test`)
-- **Development shell**: `make dev` (runs a Docker container with the source mounted)
+- **Run without building**: `make run` (runs `go run ./cmd/jigs`)
+- **Development shell**: `make dev` (runs a Docker container with the source mounted via `compose.yaml`)
 
 ## Code Conventions
 
@@ -58,10 +65,20 @@ All tests must pass before merging any change.
 
 ## CI Pipeline
 
-The GitHub Actions workflow (`.github/workflows/ci.yaml`) runs on pushes to `main`, version tags (`v*`), and pull requests against `main`. It has two jobs:
+There are two GitHub Actions workflows:
 
-1. **test** — sets up Go and runs `go test ./...`.
-2. **build-and-publish** — builds a multi-platform Docker image (`linux/amd64` and `linux/arm64`) and pushes it to GitHub Container Registry (`ghcr.io/branchard/jigs`). On pull requests the image is built but not pushed. Image tags are derived automatically from the Git ref (branch name, PR number, semver from tags, short SHA).
+### `.github/workflows/test.yaml` (Test)
+
+Runs on all pushes and all pull requests. Single job:
+
+1. **test** — sets up Go (version from `go.mod`) and runs `go test ./...`.
+
+### `.github/workflows/release.yaml` (Release)
+
+Runs on version tag pushes (`v*`). Two jobs:
+
+1. **github-release** — cross-compiles binaries for 6 platforms (linux, darwin, windows × amd64, arm64) with version injected via `-ldflags`. Creates a GitHub Release with the binaries attached.
+2. **container-publish** — builds a multi-platform Docker image (`linux/amd64` and `linux/arm64`) and pushes it to GitHub Container Registry (`ghcr.io/branchard/jigs`). Image tags are derived from the semver tag.
 
 Authentication to GHCR uses the built-in `GITHUB_TOKEN` — no extra secrets are required.
 
@@ -73,7 +90,7 @@ Modify `parseLine` and/or `unquote` in `internal/dotenv/dotenv.go`. Add correspo
 
 ### Changing prompt behavior
 
-Modify `ForValue` in `internal/prompt/prompt.go`. The function signature uses `io.Reader`/`io.Writer` — keep it that way so tests don't need a real terminal.
+Modify `ForValue` in `internal/prompt/prompt.go`. The function signature uses `*bufio.Reader`/`io.Writer` — keep it that way so tests don't need a real terminal.
 
 ### Adding CLI flags or options
 
