@@ -56,17 +56,6 @@ jobs:
           name: jigs-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
 
-  # ── Publish the GitHub Release with all binaries ───────────────────
-  publish-release:
-    needs: github-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
