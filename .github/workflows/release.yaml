@@ -8,13 +8,69 @@ on:
 
 # Read repo contents for checkout; write packages to push to GHCR.
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
 
 jobs:
+  # ── Build cross-platform binaries and create a GitHub Release ──────
+  github-release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          ext=""
+          if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
+          mkdir -p dist
+          go build -o "dist/jigs-${GOOS}-${GOARCH}${ext}" ./cmd/jigs
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jigs-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+
+  # ── Publish the GitHub Release with all binaries ───────────────────
+  publish-release:
+    needs: github-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: dist/*
+
   # ── Build the Docker image and publish it to GHCR ──────────────────
   build-and-publish:
     runs-on: ubuntu-latest
