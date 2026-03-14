@@ -13,8 +13,8 @@ dev: ## Start a development container
 build: ## Build the CLI tool
 	go build -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./build/jigs ./cmd/jigs
 
-run: ## Run the CLI tool
-	go run ./cmd/jigs
+run: ## Run the CLI tool (usage: `make run ARGS="./e2e/.env.dist"`)
+	go run ./cmd/jigs $(ARGS)
 
 test: ## Run unit and end-to-end tests
 	go test ./...
