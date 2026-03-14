@@ -63,7 +63,7 @@ jobs:
           files: dist/*
 
   # ── Build the Docker image and publish it to GHCR ──────────────────
-  build-and-publish:
+  container-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
