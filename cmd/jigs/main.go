@@ -15,7 +15,7 @@ var version = "dev"
 const outputPath = ".env"
 
 func printUsage(w *os.File) {
-	fmt.Fprintf(w, "jigs - interactively populate .env files from templates\n\n")
+	fmt.Fprintf(w, "jigs - interactively populate Dotenv files from templates\n\n")
 	fmt.Fprintf(w, "Usage:\n")
 	fmt.Fprintf(w, "  jigs <file1> [file2 ...]\n\n")
 	fmt.Fprintf(w, "Arguments:\n")
