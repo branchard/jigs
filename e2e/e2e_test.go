@@ -211,6 +211,53 @@ func TestNoArguments(t *testing.T) {
 	}
 }
 
+func TestHelpFlag(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	for _, flag := range []string{"-h", "--help"} {
+		t.Run(flag, func(t *testing.T) {
+			stdout, stderr, err := runJigs(t, bin, workDir, "", flag)
+			if err != nil {
+				t.Fatalf("jigs %s failed: %v (stderr: %s)", flag, err, stderr)
+			}
+
+			if !strings.Contains(stdout, "Usage:") {
+				t.Errorf("expected usage message on stdout for %s, got: %s", flag, stdout)
+			}
+			if !strings.Contains(stdout, "--help") {
+				t.Errorf("expected --help mentioned in output for %s, got: %s", flag, stdout)
+			}
+			if !strings.Contains(stdout, "--version") {
+				t.Errorf("expected --version mentioned in output for %s, got: %s", flag, stdout)
+			}
+		})
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	for _, flag := range []string{"-v", "--version"} {
+		t.Run(flag, func(t *testing.T) {
+			stdout, stderr, err := runJigs(t, bin, workDir, "", flag)
+			if err != nil {
+				t.Fatalf("jigs %s failed: %v (stderr: %s)", flag, err, stderr)
+			}
+
+			output := strings.TrimSpace(stdout)
+			if output == "" {
+				t.Errorf("expected version output for %s, got empty string", flag)
+			}
+			// When built without ldflags, version defaults to "dev".
+			if output != "dev" {
+				t.Errorf("expected version 'dev' for test build, got: %s", output)
+			}
+		})
+	}
+}
+
 func TestNonexistentSourceFile(t *testing.T) {
 	bin := buildBinary(t)
 	workDir := t.TempDir()

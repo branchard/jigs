@@ -9,13 +9,37 @@ import (
 	"github.com/branchard/jigs/internal/prompt"
 )
 
+// version is set at build time via -ldflags.
+var version = "dev"
+
 const outputPath = ".env"
+
+func printUsage(w *os.File) {
+	fmt.Fprintf(w, "jigs - interactively populate .env files from templates\n\n")
+	fmt.Fprintf(w, "Usage:\n")
+	fmt.Fprintf(w, "  jigs <file1> [file2 ...]\n\n")
+	fmt.Fprintf(w, "Arguments:\n")
+	fmt.Fprintf(w, "  file1, file2, ...  Template files (e.g. .env.dist, .env.dev)\n\n")
+	fmt.Fprintf(w, "Options:\n")
+	fmt.Fprintf(w, "  -h, --help         Show this help message and exit\n")
+	fmt.Fprintf(w, "  -v, --version      Show version and exit\n\n")
+	fmt.Fprintf(w, "Example:\n")
+	fmt.Fprintf(w, "  jigs .env.dist .env.dev\n")
+}
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: jigs <file1> [file2 ...]\n")
-		fmt.Fprintf(os.Stderr, "Example: jigs .env.dist .env.dev\n")
+		printUsage(os.Stderr)
 		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "-h", "--help":
+		printUsage(os.Stdout)
+		return
+	case "-v", "--version":
+		fmt.Println(version)
+		return
 	}
 
 	sourceFiles := os.Args[1:]

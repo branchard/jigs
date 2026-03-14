@@ -48,7 +48,7 @@ jobs:
           ext=""
           if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
           mkdir -p dist
-          go build -o "dist/jigs-${GOOS}-${GOARCH}${ext}" ./cmd/jigs
+          go build -ldflags "-X main.version=${GITHUB_REF_NAME#v}" -o "dist/jigs-${GOOS}-${GOARCH}${ext}" ./cmd/jigs
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

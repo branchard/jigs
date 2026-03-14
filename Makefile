@@ -10,7 +10,7 @@ dev: ## Start a development container
 	UID=$$(id -u) GID=$$(id -g) docker compose run --rm --remove-orphans dev sh -c "make help; PS1='\\w\$$ ' bash --noprofile --norc"
 
 build: ## Build the CLI tool
-	go build -o ./build/jigs ./cmd/jigs
+	go build -ldflags "-X main.version=$$(git describe --tags --always --dirty 2>/dev/null || echo dev)" -o ./build/jigs ./cmd/jigs
 
 run: ## Run the CLI tool
 	go run ./cmd/jigs
