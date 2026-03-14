@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/branchard/jigs/internal/dotenv"
 	"github.com/branchard/jigs/internal/prompt"
@@ -87,13 +88,19 @@ func main() {
 
 	// Load existing .env if it exists
 	existing := make(map[string]string)
+	alreadyExists := false
 	if _, err := os.Stat(outputPath); err == nil {
+		alreadyExists = true
+		fmt.Printf("Output file already exists in \"%s\".\n", outputPath)
+		fmt.Println("Only the missing variables will be asked.")
 		existingFile, err := dotenv.Parse(outputPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading existing %s: %v\n", outputPath, err)
 			os.Exit(1)
 		}
 		existing = existingFile.VarMap()
+	} else {
+		fmt.Printf("Output file does not exist. Creating a new one in \"%s\".\n", outputPath)
 	}
 
 	// Determine which variables need prompting
@@ -106,12 +113,12 @@ func main() {
 	}
 
 	if len(toPrompt) == 0 {
-		fmt.Println("All variables are already defined in", outputPath)
+		fmt.Printf("All variables are already defined in \"%s\".\n", outputPath)
 		return
 	}
 
 	// Prompt the user for missing values
-	fmt.Printf("Please provide values for %d variable(s):\n\n", len(toPrompt))
+	fmt.Printf("Please provide values for %d variable(s) (press enter to keep the default value in [brackets]):\n\n", len(toPrompt))
 
 	reader := bufio.NewReader(os.Stdin)
 	results := make(map[string]string)
@@ -129,7 +136,7 @@ func main() {
 	if _, err := os.Stat(outputPath); err == nil {
 		output, err = dotenv.Parse(outputPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading existing %s: %v\n", outputPath, err)
+			fmt.Fprintf(os.Stderr, "Error reading existing \"%s\": %v\n", outputPath, err)
 			os.Exit(1)
 		}
 	} else {
@@ -142,9 +149,13 @@ func main() {
 	}
 
 	if err := output.Write(outputPath); err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", outputPath, err)
+		fmt.Fprintf(os.Stderr, "Error writing \"%s\": %v\n", outputPath, err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n%s has been updated with %d variable(s).\n", outputPath, len(toPrompt))
+	if alreadyExists {
+		fmt.Printf("\n%d variable(s) has been added to \"%s\".\n", len(toPrompt), outputPath)
+	} else {
+		fmt.Printf("\n%s has been created with %d variable(s).\n", outputPath, len(toPrompt))
+	}
 }
