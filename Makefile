@@ -19,6 +19,12 @@ run: ## Run the CLI tool (usage: `make run ARGS="./e2e/.env.dist"`)
 test: ## Run unit and end-to-end tests
 	go test ./...
 
+examples: ## Run the CLI tool with multiple scenarios
+	@echo "# ── Show help ──────────────────────────────────────────────"
+	go run ./cmd/jigs --help
+	@echo "# ── Show version ───────────────────────────────────────────"
+	go run ./cmd/jigs --version
+
 .DEFAULT:
 	@echo "Command unknown: $@"
 	@echo ""
