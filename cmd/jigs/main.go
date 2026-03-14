@@ -156,6 +156,6 @@ func main() {
 	if alreadyExists {
 		fmt.Printf("\n%d variable(s) has been added to \"%s\".\n", len(toPrompt), outputPath)
 	} else {
-		fmt.Printf("\n%s has been created with %d variable(s).\n", outputPath, len(toPrompt))
+		fmt.Printf("\n\"%s\" has been created with %d variable(s).\n", outputPath, len(toPrompt))
 	}
 }
