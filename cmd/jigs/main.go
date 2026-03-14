@@ -12,8 +12,6 @@ import (
 // version is set at build time via -ldflags.
 var version = "dev"
 
-const outputPath = ".env"
-
 func printUsage(w *os.File) {
 	fmt.Fprintf(w, "jigs - interactively populate Dotenv files from templates\n\n")
 	fmt.Fprintf(w, "Usage:\n")
@@ -28,6 +26,12 @@ func printUsage(w *os.File) {
 }
 
 func main() {
+	outputPath, err := filepath.Abs(".env") // TODO: can be changed with parameter --output -o
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error determining output path: %v\n", err)
+		os.Exit(1)
+	}
+
 	if len(os.Args) < 2 {
 		printUsage(os.Stderr)
 		os.Exit(1)
