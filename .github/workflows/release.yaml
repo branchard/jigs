@@ -7,9 +7,12 @@ on:
     tags: [ "v*" ]
 
 # Read repo contents for checkout; write packages to push to GHCR.
+# id-token is needed for Sigstore signing; attestations for persisting attestations.
 permissions:
   contents: write
   packages: write
+  id-token: write
+  attestations: write
 
 env:
   IMAGE_NAME: ghcr.io/${{ github.repository }}
@@ -49,6 +52,11 @@ jobs:
           if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
           mkdir -p dist
           go build -ldflags "-X main.version=${GITHUB_REF_NAME#v}" -o "dist/jigs-${GOOS}-${GOARCH}${ext}" ./cmd/jigs
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/*
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -100,6 +108,7 @@ jobs:
       # On pull requests the image is built (to validate the Dockerfile)
       # but not pushed.
       - uses: docker/build-push-action@v7
+        id: push
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -108,3 +117,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
