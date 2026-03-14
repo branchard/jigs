@@ -5,7 +5,7 @@
 [![Go](https://img.shields.io/github/go-mod/go-version/branchard/jigs)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/branchard/jigs/blob/main/LICENSE)
 
-<img src="https://raw.githubusercontent.com/branchard/jigs/master/docs/demo.gif" alt="Jigs in action" width="100%"/>
+<img src="https://raw.githubusercontent.com/branchard/jigs/master/docs/demo.gif" alt="Jigs in action"/>
 
 CLI tool for interactively managing dotenv files with no third-party dependencies.
 
