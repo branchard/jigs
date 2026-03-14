@@ -1,5 +1,6 @@
 # @see: https://stackoverflow.com/a/70550568
 MAKEFLAGS += --no-print-directory
+.PHONY: help dev build run test
 
 ##@ Global
 help: ## Show this help
