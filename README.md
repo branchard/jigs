@@ -7,7 +7,7 @@
 
 <img src="https://raw.githubusercontent.com/branchard/jigs/master/docs/demo.gif" alt="Jigs in action"/>
 
-CLI tool for interactively managing dotenv files with no third-party dependencies.
+CLI tool for interactively populate Dotenv files from templates.
 
 Takes one or more template files (e.g. `.env.dist`, `.env.dev`), prompts you for any missing values, and writes a `.env`
 file in the current directory. If `.env` already exists, only variables not yet present are prompted.
