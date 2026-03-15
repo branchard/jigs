@@ -511,6 +511,7 @@ func TestCommentsAndBlankLinesPreservedInExistingEnv(t *testing.T) {
 func TestWithFiles(t *testing.T) {
 	bin := buildBinary(t)
 	workDir := t.TempDir()
+	outputFileName := ".env.test"
 
 	// Copy the files from the repo into the temp directory.
 	e2eDir := filepath.Join(".")
@@ -550,7 +551,7 @@ func TestWithFiles(t *testing.T) {
 
 	stdin := strings.Join(stdinLines, "\n") + "\n"
 
-	stdout, _, runErr := runJigs(t, bin, workDir, stdin, ".env.dist", ".env.dev")
+	stdout, _, runErr := runJigs(t, bin, workDir, stdin, "--output", outputFileName, ".env.dist", ".env.dev")
 	if runErr != nil {
 		t.Fatalf("jigs failed: %v", runErr)
 	}
@@ -559,7 +560,7 @@ func TestWithFiles(t *testing.T) {
 		t.Errorf("expected 37 variables prompted, got: %s", stdout)
 	}
 
-	content := readFile(t, filepath.Join(workDir, ".env"))
+	content := readFile(t, filepath.Join(workDir, outputFileName))
 
 	// Verify the explicitly-provided values.
 	checks := map[string]string{
