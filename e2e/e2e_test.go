@@ -527,30 +527,65 @@ func TestWithFiles(t *testing.T) {
 	writeFile(t, workDir, ".env.dist", string(distContent))
 	writeFile(t, workDir, ".env.dev", string(devContent))
 
-	// Provide values for: SALT_KEY, PREPOPULATED (accept default), PASSWORD,
-	// SMTP_EMAIL, DEPLOY_KEY_LOCATION.
-	stdin := "aaa\n\n1234\ntest@test.com\n/tmp\n"
+	// .env.dist has 36 variables, .env.dev adds 1 (DEPLOY_KEY_LOCATION).
+	// Total: 37 variables prompted.
+	// Variables with empty defaults that need explicit values:
+	//   EMPTY (3rd var), EMPTY_SINGLE_QUOTES (5th), EMPTY_DOUBLE_QUOTES (6th),
+	//   DEPLOY_KEY_LOCATION (37th).
+	// All others have defaults and we press Enter to accept them (except one, to test the default override).
+	//
+	// Build stdin: one line per variable, in order.
+	var stdinLines []string
+	stdinLines = append(stdinLines, "")                 // 1. BASIC [basic] → accept default
+	stdinLines = append(stdinLines, "default_override") // 2. AFTER_LINE [after_line] → override default
+	stdinLines = append(stdinLines, "myempty")          // 3. EMPTY → provide value
+	stdinLines = append(stdinLines, "")                 // 4. EMPTY_COMMENTS [#comments] → accept default
+	stdinLines = append(stdinLines, "mysinglequote")    // 5. EMPTY_SINGLE_QUOTES → provide value
+	stdinLines = append(stdinLines, "mydoublequote")    // 6. EMPTY_DOUBLE_QUOTES → provide value
+	// 7-36: remaining .env.dist vars, all have defaults → accept all
+	for i := 7; i <= 36; i++ {
+		stdinLines = append(stdinLines, "")
+	}
+	stdinLines = append(stdinLines, "/tmp/deploy") // 37. DEPLOY_KEY_LOCATION → provide value
+
+	stdin := strings.Join(stdinLines, "\n") + "\n"
 
 	stdout, _, runErr := runJigs(t, bin, workDir, stdin, ".env.dist", ".env.dev")
 	if runErr != nil {
 		t.Fatalf("jigs failed: %v", runErr)
 	}
 
-	if !strings.Contains(stdout, "5 variable(s)") {
-		t.Errorf("expected 5 variables prompted, got: %s", stdout)
+	if !strings.Contains(stdout, "37 variable(s)") {
+		t.Errorf("expected 37 variables prompted, got: %s", stdout)
 	}
 
 	content := readFile(t, filepath.Join(workDir, ".env"))
 
+	// Verify the explicitly-provided values.
 	checks := map[string]string{
-		"SALT_KEY":            "aaa",
-		"PREPOPULATED":        "prepopulated",
-		"PASSWORD":            "1234",
-		"SMTP_EMAIL":          "test@test.com",
-		"DEPLOY_KEY_LOCATION": "/tmp",
+		"AFTER_LINE":          "default_override",
+		"EMPTY":               "myempty",
+		"EMPTY_SINGLE_QUOTES": "mysinglequote",
+		"EMPTY_DOUBLE_QUOTES": "mydoublequote",
+		"DEPLOY_KEY_LOCATION": "/tmp/deploy",
 	}
 
 	for key, want := range checks {
+		expected := key + "=" + want
+		if !strings.Contains(content, expected) {
+			t.Errorf("expected %q in .env, got:\n%s", expected, content)
+		}
+	}
+
+	// Verify some default values were accepted.
+	defaultChecks := map[string]string{
+		"BASIC":       "basic",
+		"EQUAL_SIGNS": "equals==",
+		"USERNAME":    "therealnerdybeast@example.tld",
+		"SPACED_KEY":  "parsed",
+	}
+
+	for key, want := range defaultChecks {
 		expected := key + "=" + want
 		if !strings.Contains(content, expected) {
 			t.Errorf("expected %q in .env, got:\n%s", expected, content)
