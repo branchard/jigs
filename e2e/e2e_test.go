@@ -347,6 +347,142 @@ func TestIdempotency(t *testing.T) {
 	}
 }
 
+func TestOutputOptionShortFlag(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\n")
+
+	outPath := filepath.Join(workDir, "custom.env")
+
+	// -o custom.env
+	stdout, _, err := runJigs(t, bin, workDir, "bar\n", "-o", outPath, ".env.dist")
+	if err != nil {
+		t.Fatalf("jigs failed: %v", err)
+	}
+
+	if !strings.Contains(stdout, "1 variable(s)") {
+		t.Errorf("expected stdout to mention 1 variable, got: %s", stdout)
+	}
+
+	content := readFile(t, outPath)
+	if !strings.Contains(content, "FOO=bar") {
+		t.Errorf("expected FOO=bar in output file, got:\n%s", content)
+	}
+
+	// Default .env should NOT exist.
+	if _, err := os.Stat(filepath.Join(workDir, ".env")); err == nil {
+		t.Error("expected .env to not be created when -o is used")
+	}
+}
+
+func TestOutputOptionLongFlag(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\n")
+
+	outPath := filepath.Join(workDir, "custom.env")
+
+	// --output custom.env
+	_, _, err := runJigs(t, bin, workDir, "bar\n", "--output", outPath, ".env.dist")
+	if err != nil {
+		t.Fatalf("jigs failed: %v", err)
+	}
+
+	content := readFile(t, outPath)
+	if !strings.Contains(content, "FOO=bar") {
+		t.Errorf("expected FOO=bar in output file, got:\n%s", content)
+	}
+}
+
+func TestOutputOptionLongFlagEquals(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\n")
+
+	outPath := filepath.Join(workDir, "custom.env")
+
+	// --output=custom.env
+	_, _, err := runJigs(t, bin, workDir, "bar\n", "--output="+outPath, ".env.dist")
+	if err != nil {
+		t.Fatalf("jigs failed: %v", err)
+	}
+
+	content := readFile(t, outPath)
+	if !strings.Contains(content, "FOO=bar") {
+		t.Errorf("expected FOO=bar in output file, got:\n%s", content)
+	}
+}
+
+func TestOutputOptionDefaultIsEnv(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\n")
+
+	// No -o flag: should default to .env
+	_, _, err := runJigs(t, bin, workDir, "bar\n", ".env.dist")
+	if err != nil {
+		t.Fatalf("jigs failed: %v", err)
+	}
+
+	content := readFile(t, filepath.Join(workDir, ".env"))
+	if !strings.Contains(content, "FOO=bar") {
+		t.Errorf("expected FOO=bar in default .env, got:\n%s", content)
+	}
+}
+
+func TestOutputOptionMissingArgument(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\n")
+
+	for _, flag := range []string{"-o", "--output"} {
+		t.Run(flag, func(t *testing.T) {
+			// Pass the flag with no value after it.
+			_, stderr, err := runJigs(t, bin, workDir, "", flag)
+			if err == nil {
+				t.Fatalf("expected jigs to fail when %s has no argument", flag)
+			}
+
+			if !strings.Contains(stderr, "requires an argument") {
+				t.Errorf("expected 'requires an argument' error for %s, got: %s", flag, stderr)
+			}
+		})
+	}
+}
+
+func TestOutputOptionExistingOutputFile(t *testing.T) {
+	bin := buildBinary(t)
+	workDir := t.TempDir()
+
+	writeFile(t, workDir, ".env.dist", "FOO=\nBAR=\n")
+
+	outPath := filepath.Join(workDir, "custom.env")
+	writeFile(t, workDir, "custom.env", "FOO=existing\n")
+
+	// Only BAR should be prompted.
+	stdout, _, err := runJigs(t, bin, workDir, "newval\n", "-o", outPath, ".env.dist")
+	if err != nil {
+		t.Fatalf("jigs failed: %v", err)
+	}
+
+	if !strings.Contains(stdout, "1 variable(s)") {
+		t.Errorf("expected stdout to mention 1 variable, got: %s", stdout)
+	}
+
+	content := readFile(t, outPath)
+	if !strings.Contains(content, "FOO=existing") {
+		t.Errorf("expected FOO=existing preserved, got:\n%s", content)
+	}
+	if !strings.Contains(content, "BAR=newval") {
+		t.Errorf("expected BAR=newval in output, got:\n%s", content)
+	}
+}
+
 func TestCommentsAndBlankLinesPreservedInExistingEnv(t *testing.T) {
 	bin := buildBinary(t)
 	workDir := t.TempDir()
